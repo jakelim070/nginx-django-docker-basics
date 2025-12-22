@@ -1,0 +1,8 @@
+<h1>List of Engine Parts</h1>
+<ul>
+  {% for part in parts %}
+    <li>
+      <a href="{% url 'materials:engineparts_detail' part.pk %}">{{ part.part_number }}</a>
+    </li>
+  {% endfor %}
+</ul>

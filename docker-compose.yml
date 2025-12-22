@@ -1,0 +1,129 @@
+services:
+  nginx:
+    restart: unless-stopped
+    container_name: ${PROJECT_NAME}_nginx
+    build:
+      context: ./src-nginx
+      args:
+        url_docker: ${url_docker_index}
+    environment:
+      - NGINX_PORT_HTTP=80
+      - NGINX_PORT_HTTPS=443
+      - APP0_PORT=8000
+      - APP1_PORT=8001
+      - APP2_PORT=8002
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./src-nginx/templates:/etc/nginx/templates
+      - datalogs:/datalogs
+      - datacache_nginx:/var/cache/nginx
+      - ./src-nginx/www:/var/www/html:ro
+      - datashare:/datashare
+    networks:
+      - app_net
+  app0:
+    restart: unless-stopped
+    container_name: ${PROJECT_NAME}_app0
+    env_file:
+      - ./src-app0/.env.docker
+    build:
+      context: ./src-app0
+      args:
+        url_pypi: ${url_pypi_index}
+        url_docker: ${url_docker_index}
+    environment:
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=flamings
+      - DJANGO_SUPERUSER_EMAIL=admin@rockerfellas.com
+    ports:
+      - ${APP0_PORT}:${APP0_PORT}
+    networks:
+      - app_net
+    volumes:
+      - datashare:/datashare
+    entrypoint:
+      - /bin/bash
+      - entrypoint.sh
+      - ${APP0_PORT}
+
+  app1:
+    restart: unless-stopped
+    container_name: ${PROJECT_NAME}_app1
+    env_file:
+      - ./src-app1/.env.docker
+    build:
+      context: ./src-app1
+      args:
+        url_pypi: ${url_pypi_index}
+        url_docker: ${url_docker_index}
+    environment:
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=flamings
+      - DJANGO_SUPERUSER_EMAIL=admin@rockerfellas.com
+    ports:
+      - ${APP1_PORT}:${APP1_PORT}
+    networks:
+      - app_net
+    volumes:
+      - datashare:/datashare
+    entrypoint:
+      - /bin/bash
+      - entrypoint.sh
+      - ${APP1_PORT}
+
+  app2:
+    restart: unless-stopped
+    container_name: ${PROJECT_NAME}_app2
+    env_file:
+      - ./src-app2/.env.docker
+    build:
+      context: ./src-app2
+      args:
+        url_pypi: ${url_pypi_index}
+        url_docker: ${url_docker_index}
+    ports:
+      - ${APP2_PORT}:${APP2_PORT}
+    environment:
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=flamings
+      - DJANGO_SUPERUSER_EMAIL=admin@rockerfellas.com
+    networks:
+      - app_net
+    volumes:
+      - datashare:/datashare
+    entrypoint:
+      - /bin/bash
+      - entrypoint.sh
+      - ${APP2_PORT}
+
+  mgdb:
+    profiles:
+      - prod
+    container_name: ${PROJECT_NAME}_mgdb
+    restart: unless-stopped
+    build:
+      context: ./src_mgdb
+      args:
+        url_docker: ${url_docker_index}
+    env_file:
+      - ./src_mgdb/.env
+    command: [ "--bind_ip", "0.0.0.0", "--port", "${MGDB_PORT}" ]
+    ports:
+      - "${MGDB_PORT}:${MGDB_PORT}"
+    volumes:
+      - mgdb_data:/data/db
+      - ./src_mgdb/init-db.js:/docker-entrypoint-initdb.d/init-db.js:ro
+    networks:
+      - app_net
+
+volumes:
+  datashare:
+  datalogs:
+  datacache_nginx:
+  mgdb_data:
+
+
+networks:
+  app_net:

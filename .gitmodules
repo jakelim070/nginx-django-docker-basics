@@ -1,0 +1,6 @@
+[submodule "src-mgdb"]
+	path = src-mgdb
+	url = git@github.com:jakelime/mgdb.git
+[submodule "src-nginx"]
+	path = src-nginx
+	url = git@github.com:jakelime/jetforge-nginx.git

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Create New Vendor</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Create</button>
+  </form>
+  <a href="{% url 'outhouse:vendor-list' %}">Back to Vendors List</a>
+{% endblock %}

@@ -1,0 +1,6 @@
+<h1>{{ part.part_number }}</h1>
+<ul>
+  {% for instance in part.enginepartinstance_set.all %}
+    <li>SN:{{ instance.serial_number }} - x{{ instance.qty }}</li>
+  {% endfor %}
+</ul>
