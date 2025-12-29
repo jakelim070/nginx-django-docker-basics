@@ -16,7 +16,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./src-nginx/templates:/etc/nginx/templates
+      - ./nginx_custom/templates:/etc/nginx/templates
+      - ./certs:/etc/nginx/certs:ro
       - datalogs:/datalogs
       - datacache_nginx:/var/cache/nginx
       - ./src-nginx/www:/var/www/html:ro

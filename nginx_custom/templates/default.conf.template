@@ -1,0 +1,113 @@
+upstream app0 {
+    server app0:${APP0_PORT};
+}
+upstream app1 {
+    server app1:${APP1_PORT};
+}
+upstream app2 {
+    server app2:${APP2_PORT};
+}
+
+
+# Server block for HTTP traffic
+server {
+    listen ${NGINX_PORT_HTTP};
+    server_name _;
+
+    # Resolver is required to point to Docker internal DNS
+    resolver 127.0.0.11 valid=30s;
+
+    location /static/ {
+        alias /datashare/www/static/;
+    }
+
+    location /media/ {
+        alias /datashare/www/media/;
+    }
+
+    location /app1/ {
+        proxy_pass http://app1/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /app2/ {
+        proxy_pass http://app2/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        proxy_pass http://app0/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
+
+# Server block for HTTPS traffic
+server {
+    listen ${NGINX_PORT_HTTPS} ssl;
+    server_name _;
+
+    ssl_certificate /etc/nginx/certs/nginx.crt;
+    ssl_certificate_key /etc/nginx/certs/nginx.key;
+
+    # Resolver is required to point to Docker internal DNS
+    resolver 127.0.0.11 valid=30s;
+
+    location /static/ {
+        alias /datashare/www/static/;
+    }
+
+    location /media/ {
+        alias /datashare/www/media/;
+    }
+
+    location /app1/ {
+        # app1 is a Django application
+        # Take note of the trailing slash in both location and proxy_pass
+        # nginx will strip the /app1/ prefix before passing the request to the backend
+        # django will then prepend /app1 to all its URLs with FORCE_SCRIPT_NAME=/app1
+        proxy_pass http://app1/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /app2/ {
+        # app2 is a Django application
+        # Take note of the trailing slash in both location and proxy_pass
+        # nginx will strip the /app2/ prefix before passing the request to the backend
+        # django will then prepend /app2 to all its URLs with FORCE_SCRIPT_NAME=/app2
+        proxy_pass http://app2/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        proxy_pass http://app0/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
