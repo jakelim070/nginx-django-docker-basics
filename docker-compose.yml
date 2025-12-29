@@ -98,23 +98,33 @@ services:
       - entrypoint.sh
       - ${APP2_PORT}
 
+  app3:
+    restart: unless-stopped
+    container_name: ${PROJECT_NAME}_app3
+    build:
+      context: ./src-app3
+    networks:
+      - app_net
+    ports:
+      - "8003:80"
+
   mgdb:
     profiles:
       - prod
     container_name: ${PROJECT_NAME}_mgdb
     restart: unless-stopped
     build:
-      context: ./src_mgdb
+      context: ./src-mgdb
       args:
         url_docker: ${url_docker_index}
     env_file:
-      - ./src_mgdb/.env
+      - ./src-mgdb/.env
     command: [ "--bind_ip", "0.0.0.0", "--port", "${MGDB_PORT}" ]
     ports:
       - "${MGDB_PORT}:${MGDB_PORT}"
     volumes:
       - mgdb_data:/data/db
-      - ./src_mgdb/init-db.js:/docker-entrypoint-initdb.d/init-db.js:ro
+      - ./src-mgdb/init-db.js:/docker-entrypoint-initdb.d/init-db.js:ro
     networks:
       - app_net
 
