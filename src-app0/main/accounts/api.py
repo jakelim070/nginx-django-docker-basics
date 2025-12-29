@@ -1,21 +1,16 @@
-from ninja_jwt.controller import NinjaJWTDefaultController
-from ninja_extra import NinjaExtraAPI
+from ninja import NinjaAPI
+from django.contrib.auth import authenticate
+from django.http import HttpRequest
+from .schemas import LoginSchema, TokenSchema
+from .utils import generate_tokens
 
-# User requested /api/auth.
-# api is mounted at /api/auth/ in urls.py.
-# So we need to prefix the controller with 'auth' or mount it differently.
-# NinjaJWTDefaultController usually provides /token/pair etc.
-# If we want /api/auth/pair, we need to register it with a prefix or change api mount.
-# But "create api path /api/auth" was the instruction.
-# Since api is at /api/, registering controller usually adds paths.
-# Let's try to register it with prefix, or check docs.
-# NinjaExtraAPI doesn't have a simple "register with prefix" for controllers that I recall easily without checking docs.
-# But we can try just changing the mount in urls.py to /api/auth/ or modifying the router.
+api = NinjaAPI()
 
-# Actually, the user said "create api path /api/auth".
-# Currently it is /api/token/pair.
-# If I change urls.py to path("api/auth/", api.urls), then it becomes /api/auth/token/pair.
-# Let's do that.
-
-api = NinjaExtraAPI()
-api.register_controllers(NinjaJWTDefaultController)
+@api.post("/login", response=TokenSchema)
+def login(request: HttpRequest, data: LoginSchema):
+    user = authenticate(username=data.username, password=data.password)
+    if user is not None:
+        tokens = generate_tokens(user)
+        return tokens
+    else:
+        return api.create_response(request, {"detail": "Invalid credentials"}, status=401)

@@ -42,8 +42,6 @@ DEFAULT_DJANGO_INSTALLED_APPS = [
 ]
 INSTALLED_APPS = [
     "corsheaders",
-    "ninja_jwt",
-    "ninja_extra",
     "accounts",
 ]
 
@@ -62,9 +60,10 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-NINJA_JWT = {
-    'ACCESS_TOKEN_LIFETIME': 3600,
-    'REFRESH_TOKEN_LIFETIME': 86400,
+JWT_SETTINGS = {
+    'ACCESS_TOKEN_LIFETIME': 3600,  # seconds
+    'REFRESH_TOKEN_LIFETIME': 86400, # seconds
+    'ALGORITHM': 'HS256',
 }
 
 ROOT_URLCONF = "main.urls"

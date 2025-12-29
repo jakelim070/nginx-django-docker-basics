@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 // Assume API is at root /api/auth since we proxy /api to App0
-// However, the Ninja JWT default controller is now at /api/auth/token/pair
-// Our proxy in Nginx: /api/ -> App0 /api/
-// So client requests /api/auth/token/pair
-const API_URL = '/api/auth/token';
+// Our custom implementation: /api/auth/login
+const API_URL = '/api/auth';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('access_token'));
@@ -26,7 +24,7 @@ function App() {
     e.preventDefault();
     setError('');
     try {
-      const response = await axios.post(`${API_URL}/pair`, {
+      const response = await axios.post(`${API_URL}/login`, {
         username,
         password
       });

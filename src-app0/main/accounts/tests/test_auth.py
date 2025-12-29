@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from ninja_jwt.tokens import AccessToken, RefreshToken
 import json
+from ..utils import decode_token
 
 class AuthenticationTest(TestCase):
     def setUp(self):
@@ -9,13 +9,9 @@ class AuthenticationTest(TestCase):
         self.password = "password123"
         self.user = User.objects.create_user(username=self.username, password=self.password)
 
-    def test_token_obtain_pair(self):
-        # Ninja JWT default controller is at root of api if not prefixed
-        # In api.py we registered NinjaJWTDefaultController
-        # By default it seems to put them at /token/pair etc relative to api root
-        # We moved mount point to /api/auth/
+    def test_login(self):
         response = self.client.post(
-            '/api/auth/token/pair',
+            '/api/auth/login',
             data=json.dumps({'username': self.username, 'password': self.password}),
             content_type='application/json'
         )
@@ -24,11 +20,15 @@ class AuthenticationTest(TestCase):
         self.assertIn('access', data)
         self.assertIn('refresh', data)
 
-    def test_token_verify(self):
-        token = AccessToken.for_user(self.user)
+        # Verify token content
+        decoded = decode_token(data['access'])
+        self.assertEqual(decoded['username'], self.username)
+        self.assertEqual(decoded['type'], 'access')
+
+    def test_login_invalid(self):
         response = self.client.post(
-            '/api/auth/token/verify',
-            data=json.dumps({'token': str(token)}),
+            '/api/auth/login',
+            data=json.dumps({'username': self.username, 'password': 'wrongpassword'}),
             content_type='application/json'
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 401)
