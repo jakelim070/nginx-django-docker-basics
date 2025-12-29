@@ -16,11 +16,10 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx_custom/templates:/etc/nginx/templates
-      - ./certs:/etc/nginx/certs:ro
+      - ./src-nginx/templates:/etc/nginx/templates
+      - ./src-nginx/certs:/etc/nginx/certs:ro
       - datalogs:/datalogs
       - datacache_nginx:/var/cache/nginx
-      - ./src-nginx/www:/var/www/html:ro
       - datashare:/datashare
     networks:
       - app_net
