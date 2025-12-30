@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,11 +43,17 @@ DEFAULT_DJANGO_INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
-INSTALLED_APPS = []
+INSTALLED_APPS = [
+    "corsheaders",
+    "ninja_jwt",
+    "ninja_extra",
+    "accounts",
+]
 
 INSTALLED_APPS += DEFAULT_DJANGO_INSTALLED_APPS
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -53,6 +62,13 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+NINJA_JWT = {
+    "ACCESS_TOKEN_LIFETIME": 3600,
+    "REFRESH_TOKEN_LIFETIME": 86400,
+}
 
 ROOT_URLCONF = "main.urls"
 
@@ -128,10 +144,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 FORCE_SCRIPT_NAME = os.getenv("REVERSE_PROXY_PREFIX", "")
 
-STATIC_URL = "/static/"
-_STATIC_ROOT = os.getenv("STATIC_ROOT_PATH", "")
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+STATIC_URL = os.getenv("STATIC_URL", "/static/")
+_STATIC_ROOT = os.getenv("STATIC_ROOT_PATH", "~/datashare/www/static")
 if _STATIC_ROOT:
     static_root = Path(_STATIC_ROOT).expanduser()
-    if not static_root.is_dir():
-        static_root.mkdir(parents=True, exist_ok=True)
-    STATIC_ROOT = str(static_root.absolute())
+    try:
+        if not static_root.is_dir():
+            static_root.mkdir(parents=True, exist_ok=True)
+        STATIC_ROOT = str(static_root.absolute())
+    except PermissionError:
+        # Fallback for dev environment without root access to /datashare
+        STATIC_ROOT = str(BASE_DIR / "temp_static")
+        if not os.path.exists(STATIC_ROOT):
+            os.makedirs(STATIC_ROOT)
