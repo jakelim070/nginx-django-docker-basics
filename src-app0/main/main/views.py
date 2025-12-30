@@ -33,6 +33,14 @@ class LandingPageView(TemplateView):
                 "btn_class": "btn-outline-success",
                 "bg_class": "bg-success",
             },
+            {
+                "name": "Application 3",
+                "description": "React SPA with JWT Authentication.",
+                "url": "/app3/",
+                "icon": "fa-atom",  # FontAwesome class
+                "btn_class": "btn-outline-info",
+                "bg_class": "bg-info",
+            },
         ]
 
         return context
